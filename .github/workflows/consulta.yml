@@ -8,7 +8,7 @@ on:
         default: "15"
       volumen_minimo:
         description: "Volumen minimo negociado en ese intervalo"
-        default: "10000"
+        default: "100000"
 
 jobs:
   consulta:
