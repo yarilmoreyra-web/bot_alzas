@@ -24,8 +24,9 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 MINUTOS = int(os.environ.get("MINUTOS") or 15)
-MIN_VOL = int(os.environ.get("VOLUMEN_MINIMO") or 10000)   # volumen negociado en el intervalo
+MIN_VOL = int(os.environ.get("VOLUMEN_MINIMO") or 100000)   # volumen negociado en el intervalo
 TOP_N = 25
+RVOL_DIAS = int(os.environ.get("RVOL_DIAS") or 20)   # días para el promedio de volumen diario
 
 TZ_NY = pytz.timezone("America/New_York")
 TZ_LIMA = pytz.timezone("America/Lima")
@@ -117,6 +118,55 @@ def pedir_velas(ctx, simbolo, n=30):
     return None
 
 
+def sesion_actual(t):
+    """Qué campo del quote corresponde a la sesión en curso (hora de Nueva York)."""
+    m = t.hour * 60 + t.minute
+    if 4 * 60 <= m < 9 * 60 + 30:
+        return "pre_market_quote"
+    if 9 * 60 + 30 <= m < 16 * 60:
+        return None                      # sesión regular: campos del quote principal
+    if 16 * 60 <= m < 20 * 60:
+        return "post_market_quote"
+    return "overnight_quote"
+
+
+def datos_sesion(ctx, simbolos, atributo):
+    """VWAP (valor negociado / volumen) y máximo (HOD) de la sesión en curso."""
+    res = {}
+    try:
+        for q in ctx.quote(simbolos):
+            fuente = getattr(q, atributo, None) if atributo else q
+            if not fuente:
+                continue
+            vol = int(getattr(fuente, "volume", 0) or 0)
+            turnover = float(getattr(fuente, "turnover", 0) or 0)
+            hod = float(getattr(fuente, "high", 0) or 0)
+            prev = float(q.prev_close or 0)      # cierre anterior, del quote principal
+            res[q.symbol] = (turnover / vol if vol > 0 and turnover > 0 else 0.0, hod, prev, vol)
+    except Exception as e:
+        log.warning("No pude obtener VWAP/HOD: %s", e)
+    return res
+
+
+def promedio_volumen(ctx, simbolo, descartar_hoy=False):
+    """Volumen diario promedio de los últimos RVOL_DIAS días (velas diarias)."""
+    velas = None
+    for intento in range(3):
+        try:
+            velas = ctx.candlesticks(simbolo, Period.Day, RVOL_DIAS + 1, AdjustType.NoAdjust)
+            break
+        except Exception as e:
+            log.warning("%s (promedio de volumen): %s (reintento %d)", simbolo, e, intento + 1)
+            time.sleep(1.5)
+    if not velas:
+        return 0.0
+    velas = sorted(velas, key=lambda c: c.timestamp)
+    if descartar_hoy:
+        velas = velas[:-1]            # quita la vela de hoy, que está incompleta
+    vols = [int(c.volume or 0) for c in velas[-RVOL_DIAS:] if int(c.volume or 0) > 0]
+    return sum(vols) / len(vols) if vols else 0.0
+
+
 def crear_config():
     """Crea la conexión con Longbridge activando los datos overnight
     (según su documentación hay que activarlos de forma explícita)."""
@@ -195,13 +245,35 @@ def main():
         f"_Consulta: {hora_txt}_\n"
         f"_Filtro: Vol en el intervalo > {MIN_VOL:,} · {len(datos)} tickers analizados_\n\n"
     )
-    items = [
-        f"*{i}. {f['simbolo']}*\n"
-        f"   📈 Subida: `{f['pct']:+.2f}%`\n"
-        f"   💰 Ahora: `${f['ahora']:.2f}` (Hace {MINUTOS} min: `${f['base']:.2f}`)\n"
-        f"   📊 Vol en {MINUTOS} min: `{f['vol']:,}`\n\n"
-        for i, f in enumerate(top, 1)
-    ]
+    sesion = sesion_actual(inicio)
+    extra = datos_sesion(ctx, [f["simbolo"] for f in top], sesion)
+
+    # RVOL: solo para el top (≈25 llamadas extra, no para las 158 acciones)
+    descartar_hoy = sesion in (None, "post_market_quote")
+    promedios = {}
+    for f in top:
+        promedios[f["simbolo"]] = promedio_volumen(ctx, f["simbolo"], descartar_hoy)
+        time.sleep(0.12)
+
+    items = []
+    for i, f in enumerate(top, 1):
+        vwap, hod, prev, vol_ses = extra.get(f["simbolo"], (0.0, 0.0, 0.0, 0))
+        prom = promedios.get(f["simbolo"], 0.0)
+        txt = (
+            f"*{i}. {f['simbolo']}*\n"
+            f"   📈 Subida: `{f['pct']:+.2f}%`\n"
+            f"   💰 Ahora: `${f['ahora']:.2f}` (Hace {MINUTOS} min: `${f['base']:.2f}`)\n"
+        )
+        if prev > 0:
+            txt += f"   📆 Cierre ayer: `${prev:.2f}` (precio {(f['ahora'] / prev - 1) * 100:+.1f}%)\n"
+        if vwap > 0:
+            txt += f"   📐 VWAP: `${vwap:.2f}` (precio {(f['ahora'] / vwap - 1) * 100:+.1f}%)\n"
+        if hod > 0:
+            txt += f"   🔝 HOD: `${hod:.2f}` (precio {(f['ahora'] / hod - 1) * 100:+.1f}%)\n"
+        if prom > 0 and vol_ses > 0:
+            txt += f"   🔥 RVOL: `{vol_ses / prom:.2f}x` (vol sesión vs prom. {RVOL_DIAS}d: `{prom:,.0f}`)\n"
+        txt += f"   📊 Vol en {MINUTOS} min: `{f['vol']:,}`\n\n"
+        items.append(txt)
     enviar_en_bloques(encabezado, items)
     log.info("Consulta enviada (%d acciones).", len(top))
 
