@@ -32,7 +32,7 @@ TZ_NY = pytz.timezone("America/New_York")
 TZ_LIMA = pytz.timezone("America/Lima")
 
 _WATCHLIST_RAW = [
-    "KOD.US", "SYNA.US", "ACLS.US", "CAMT.US", "SATS.US", "AMKR.US", "NPO.US", "PENG.US", "IBRX.US", "MTRN.US", "TER.US", "MTSI.US", "DIOD.US", "DXPE.US", "LW.US", "TXN.US", "TECK.US", "LPTH.US", "MXL.US", "IMOS.US", "CNOB.US", "SOFI.US", "DY.US", "TXT.US", "CSCO.US", "SPCX.US", "AAOI.US", "SMMT.US",
+    "KOD.US", "SYNA.US", "PCVX.US", "NVAX.US", "PURR.US", "TWST", "SDGR.US", "TEM", "GMAB.US", "ACLS.US", "CAMT.US", "SATS.US", "AMKR.US", "NPO.US", "PENG.US", "IBRX.US", "MTRN.US", "TER.US", "MTSI.US", "DIOD.US", "DXPE.US", "LW.US", "TXN.US", "TECK.US", "LPTH.US", "MXL.US", "IMOS.US", "CNOB.US", "SOFI.US", "DY.US", "TXT.US", "CSCO.US", "SPCX.US", "AAOI.US", "SMMT.US",
     "TWLO.US", "PTGX.US", "NTLA.US", "DNLI.US", "MRNA.US", "ALC.US", "PLTR.US",
     "BAP.US", "JNJ.US", "MPWR.US", "HDB.US", "ASX.US", "QMCO.US", "TXG.US", "AKAM.US",
     "VST.US", "IONQ.US", "IBM.US", "VKTX.US", "RVMD.US", "BBOT.US", "KLAC.US", "LRCX.US",
