@@ -17,6 +17,59 @@ jobs:
       - name: Instalar dependencias
         run: pip install longbridge pytz requests openpyxl
 
+      - name: Diagnostico de Secrets y Conectividad
+        env:
+          LONGBRIDGE_APP_KEY: ${{ secrets.LONGBRIDGE_APP_KEY }}
+          LONGBRIDGE_APP_SECRET: ${{ secrets.LONGBRIDGE_APP_SECRET }}
+          LONGBRIDGE_ACCESS_TOKEN: ${{ secrets.LONGBRIDGE_ACCESS_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "
+          import os, sys, requests
+
+          print('=== 1. VERIFICACIÓN DE SECRETS ===', flush=True)
+          secrets_keys = [
+              'LONGBRIDGE_APP_KEY',
+              'LONGBRIDGE_APP_SECRET',
+              'LONGBRIDGE_ACCESS_TOKEN',
+              'TELEGRAM_BOT_TOKEN',
+              'TELEGRAM_CHAT_ID'
+          ]
+          missing = []
+          for k in secrets_keys:
+              val = os.getenv(k, '')
+              status = 'OK' if val else 'FALTANTE'
+              print(f'Secret {k}: {status}', flush=True)
+              if not val:
+                  missing.append(k)
+
+          if missing:
+              print(f'ERROR: Faltan los siguientes secrets: {missing}', flush=True)
+              sys.exit(1)
+
+          print('\n=== 2. VERIFICACIÓN DE CONEXIÓN CON TELEGRAM ===', flush=True)
+          token = os.getenv('TELEGRAM_BOT_TOKEN')
+          try:
+              res = requests.get(f'https://api.telegram.org/bot{token}/getMe', timeout=10)
+              if res.status_code == 200:
+                  print('Conexión con Telegram API: OK', flush=True)
+              else:
+                  print(f'Error Telegram API (HTTP {res.status_code}): {res.text}', flush=True)
+          except Exception as e:
+              print(f'Fallo al conectar con Telegram: {e}', flush=True)
+
+          print('\n=== 3. COMPROBACIÓN DE LIBRERÍA LONGBRIDGE ===', flush=True)
+          try:
+              import longbridge
+              print('Importación de librería longbridge: OK', flush=True)
+          except Exception as e:
+              print(f'Error al importar longbridge: {e}', flush=True)
+              sys.exit(1)
+
+          print('\nDiagnóstico completado con éxito. Iniciando script principal...\n', flush=True)
+          "
+
       - name: Ejecutar datos del dia
         run: python datos_dia.py
         env:
