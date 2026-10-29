@@ -34,7 +34,7 @@ TZ_LIMA = pytz.timezone("America/Lima")
 _WATCHLIST_RAW = [
    
     "AAOI.US", "AAPL.US", "ACHR.US", "ACLS.US", "AGX.US", "AKAM.US", "ALAB.US", "ALC.US", "ALNY.US", "ALVO.US",
-    "AMAT.US", "AMD.US", "AMKR.US", "AMT.US", "AMZN.US", "ANET.US", "APA.US", "APH.US", "APLD.US", "APP.US",
+    "AMAT.US", "AMD.US", "AMKR.US", "AMPX.US","AMT.US", "AMZN.US", "ANET.US", "APA.US", "APH.US", "APLD.US", "APP.US",
     "ARM.US", "ARQT.US", "ASML.US", "ASX.US", "AUNA.US", "AVAV.US", "AVGO.US", "AXGN.US", "AXP.US", "AZO.US",
     "BA.US", "BABA.US", "BAP.US", "BBOT.US", "BE.US", "BEAM.US", "BGC.US", "BRK-B.US", "C.US", "CAI.US",
     "CAMT.US", "CAT.US", "CBRS.US", "CELC.US", "CF.US", "CGEM.US", "CIEN.US", "CIFR.US", "CLOV.US", "CLS.US",
@@ -50,7 +50,7 @@ _WATCHLIST_RAW = [
     "MRNA.US", "MRVL.US", "MSFT.US", "MSTR.US", "MT.US", "MTRN.US", "MTSI.US", "MTZ.US", "MU.US", "MXL.US",
     "NBIS.US", "NEOG.US", "NFLX.US", "NOK.US", "NOW.US", "NPO.US", "NRG.US", "NTLA.US", "NTRA.US", "NVDA.US",
     "OKTA.US", "ORCL.US", "ORKA.US", "OSW.US", "P.US", "PANW.US", "PCVX.US", "PENG.US", "PEP.US", "PGNY.US",
-    "PLTR.US", "PNC.US", "POWL.US", "PTGX.US", "PVLA.US", "PWR.US", "QBTS.US", "QCOM.US", "QMCO.US", "RGTI.US",
+    "PLTR.US", "PNC.US", "POWL.US", "PTGX.US", "PVLA.US", "PWR.US", "QBTS.US", "QCOM.US", "QMCO.US", "RBRK.US", "RGTI.US",
     "ROK.US", "RTX.US", "RUSHB.US", "RVMD.US", "SEI.US", "SHAZ.US", "SHOP.US", "SIMO.US", "SITM.US", "SKHY.US",
     "SLS.US", "SLXN.US", "SMCI.US", "SMMT.US", "SNDK.US", "SNOW.US", "SOFI.US", "SPCX.US", "SPGI.US", "SQM.US",
     "SRRK.US", "STM.US", "STRL.US", "STX.US", "SYK.US", "SYNA.US", "TE.US", "TEL.US", "TER.US", "TLN.US",
